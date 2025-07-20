@@ -1,0 +1,461 @@
+<!-- Guna Profiler Component -->
+<section id="guna-profiler">
+    <!-- Dependencies for this component -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* General App Styles */
+        #guna-profiler { font-family: 'Inter', sans-serif; background-color: #fdfaf6; padding: 2rem 0; }
+        #guna-profiler.quiz-stage { background-color: #f0f9ff; }
+        #guna-profiler.results-stage { background-color: #fffbeb; }
+        .hidden { display: none !important; }
+
+        /* Quiz Option Buttons */
+        .option-btn { background-color: white; border: 2px solid #e5e7eb; transition: all 0.2s ease-in-out; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .option-btn:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); border-color: #fcd34d; transform: translateY(-2px); }
+        .option-btn.selected { background-image: linear-gradient(to right, #fffbeb, #fef3c7); border-color: #f59e0b; box-shadow: 0 6px 16px rgba(0,0,0,0.15); transform: translateY(-1px); }
+        .option-btn .selection-dot { opacity: 0; transform: scale(0.5); transition: all 0.2s ease-in-out; }
+        .option-btn.selected .selection-dot { opacity: 1; transform: scale(1); background-color: #f59e0b; }
+
+        /* Results Tab Buttons */
+        .tab-button { color: #4b5563; border-bottom-width: 2px; border-color: transparent; transition: all 0.3s ease; font-size: 1.05rem; font-weight: 500; padding: 0.75rem 1rem; border-radius: 0.5rem 0.5rem 0 0; margin: 0 0.25rem; white-space: nowrap; cursor: pointer; }
+        .tab-button:hover { color: #f97316; background-color: #fffbeb; }
+        .tab-button.active { color: #f97316; border-color: #f97316; font-weight: 700; background-color: #ffffff; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 10; position: relative; border-bottom-color: #ffffff; }
+        .tab-button.locked { color: #6b7280; background-color: #f3f4f6; cursor: pointer; }
+        .tab-button.locked:hover { background-color: #e5e7eb; color: #1f2937; }
+
+        /* Guna Progress Bars */
+        .guna-bar { transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        .sattva-bar { background-color: #f59e0b; } .rajas-bar { background-color: #ec4899; } .tamas-bar { background-color: #8b5cf6; }
+
+        /* Personality Card in Results */
+        .personality-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .personality-title { font-size: 2.25rem; font-weight: 800; }
+        .personality-code { font-size: 1.125rem; font-weight: 500; background-color: rgba(255,255,255,0.15); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; margin-bottom: 1rem; }
+        .personality-description { font-size: 1.125rem; line-height: 1.75; max-width: 45rem; margin: 0 auto; opacity: 0.9; }
+
+        /* Analysis & Recommendation Boxes */
+        .problem-box { background: linear-gradient(to right, #fff1f2, #ffe4e6); border-left: 4px solid #f87171; }
+        .solution-box { background: linear-gradient(to right, #f0fdf4, #dcfce7); border-left: 4px solid #4ade80; }
+        .interplay-box { background: linear-gradient(to right, #eff6ff, #dbeafe); border-left: 4px solid #3b82f6; }
+        .balance-box { background: linear-gradient(to right, #f5f3ff, #ede9fe); border-left: 4px solid #8b5cf6; }
+        .shadow-box { background: linear-gradient(to right, #fdf2f8, #fce7f3); border-left: 4px solid #ec4899; }
+        .recommendation-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .color-swatch { width: 3rem; height: 3rem; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 2px solid white; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-out { animation: fadeOut 0.5s ease-in-out; }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+    </style>
+
+    <div id="guna-profiler-elementor-container">
+        <!-- Main App Container -->
+        <div class="guna-profiler-app">
+
+            <!-- App Content Wrapper -->
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                <header class="text-center mb-8 sm:mb-12" id="mainHeader">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-orange-500 to-amber-500 text-transparent bg-clip-text mb-3" data-i18n-key="mainTitle"></h1>
+                    <p class="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto" data-i18n-key="mainSubtitle"></p>
+                </header>
+
+                <main id="profiler-container">
+                    <!-- Quiz Container -->
+                    <section id="quizContainer">
+                        <section id="instructionsContainer" class="bg-white shadow-xl rounded-lg p-6 sm:p-8 border-t-4 border-orange-500 mb-8">
+                            <h2 class="text-xl sm:text-2xl font-semibold mb-4 flex items-center gap-3 text-gray-700"><i class="fas fa-book-open text-orange-500"></i><span data-i18n-key="instructionsTitle"></span></h2>
+                            <ul class="list-disc pl-6 space-y-2 text-gray-600">
+                                <li data-i18n-key="instruction1"></li>
+                                <li data-i18n-key="instruction2"></li>
+                                <li data-i18n-key="instruction3"></li>
+                            </ul>
+                        </section>
+                        <section id="progressContainer" class="mb-8">
+                            <div class="text-sm flex justify-between items-center mb-2 text-gray-500">
+                                <span id="questionCounter"></span>
+                                <span id="answeredStatus"></span>
+                            </div>
+                            <div class="relative w-full bg-gray-200 rounded-full h-3"><div id="progressBar" class="bg-gradient-to-r from-orange-400 to-amber-500 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div></div>
+                        </section>
+                        <div id="questionBox" class="mt-6 bg-transparent p-0 text-center" aria-live="polite"></div>
+                    </section>
+                    
+                    <!-- Result Container -->
+                    <section id="result" class="hidden mt-8 bg-gray-50 rounded-xl shadow-2xl p-4 sm:p-6 md:p-8">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl sm:text-4xl font-bold mb-2 text-orange-600" data-i18n-key="resultsTitle"></h2>
+                            <p class="text-md sm:text-lg text-gray-500" data-i18n-key="resultsSubtitle"></p>
+                        </div>
+                        <div class="mb-6 sm:mb-8 border-b border-gray-300">
+                            <nav class="flex flex-wrap sm:flex-nowrap justify-center -mb-px" aria-label="Tabs">
+                                <button class="tab-button active" id="overviewTab" role="tab" data-i18n-key="overviewTab"></button>
+                                <button class="tab-button" id="analysisTab" role="tab" data-i18n-key="analysisTab"></button>
+                                <button class="tab-button" id="recommendationsTab" role="tab" data-i18n-key="recommendationsTab"></button>
+                                <button class="tab-button" id="colorTherapyTab" role="tab" data-i18n-key="colorTherapyTab"></button>
+                                <button class="tab-button locked" id="advancedTab" role="tab">
+                                    <i class="fas fa-lock mr-2"></i><span data-i18n-key="advancedTab"></span>
+                                </button>
+                            </nav>
+                        </div>
+                        <div class="relative">
+                            <div id="resultTabsContainer">
+                                <div id="overviewContent" class="result-tab-content fade-in"></div>
+                                <div id="analysisContent" class="result-tab-content hidden fade-in"></div>
+                                <div id="recommendationsContent" class="result-tab-content hidden fade-in"></div>
+                                <div id="colorTherapyContent" class="result-tab-content hidden fade-in"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Secondary Actions -->
+                        <div class="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-center items-center gap-4">
+                            <button id="backToDashboardBtn" class="bg-orange-500 border-2 border-orange-500 text-white w-full sm:w-auto text-base font-semibold rounded-lg px-6 py-3 text-center flex items-center justify-center gap-2 hover:bg-orange-600 transition-colors"><i class="fas fa-arrow-left"></i><span>Return to Dashboard</span></button>
+                            <button id="retakeAssessmentBtn" class="bg-white border-2 border-gray-300 text-gray-700 w-full sm:w-auto text-base font-medium rounded-lg px-6 py-3 text-center flex items-center justify-center gap-2 hover:bg-gray-100 hover:border-gray-400 transition-colors"><i class="fas fa-redo"></i><span data-i18n-key="retakeBtn"></span></button>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const state = {
+            currentLanguage: "en",
+            currentQuestionIndex: 0,
+            scores: { sattva: 0, rajas: 0, tamas: 0 },
+            personalityArchetypeCode: '',
+            gunaTraitCode: '',
+            dominantGuna: '',
+            activeTab: 'overviewContent',
+        };
+
+        const dom = {
+            appContainer: document.getElementById('guna-profiler'),
+            quizContainer: document.getElementById('quizContainer'),
+            result: document.getElementById('result'),
+            questionBox: document.getElementById('questionBox'),
+            progressBar: document.getElementById('progressBar'),
+            questionCounter: document.getElementById('questionCounter'),
+            answeredStatus: document.getElementById('answeredStatus'),
+            retakeAssessmentBtn: document.getElementById('retakeAssessmentBtn'),
+            overviewTab: document.getElementById('overviewTab'),
+            analysisTab: document.getElementById('analysisTab'),
+            recommendationsTab: document.getElementById('recommendationsTab'),
+            colorTherapyTab: document.getElementById('colorTherapyTab'),
+            advancedTab: document.getElementById('advancedTab'),
+            backToDashboardBtn: document.getElementById('backToDashboardBtn'),
+        };
+
+        const i18n = {
+            en: {
+                mainTitle: "The Guna Profiler",
+                mainSubtitle: "Discover your inner nature through ancient Vedic wisdom.",
+                instructionsTitle: "Instructions:",
+                instruction1: "Answer each question based on your natural tendencies.",
+                instruction2: "Choose the response that most authentically reflects you.",
+                instruction3: "Be honest for accurate self-discovery.",
+                questionCounter: (c, t) => `Question ${c} of ${t}`,
+                answeredStatus: (a, t) => `${a}/${t} answered`,
+                resultsTitle: "Your Guna Profile",
+                resultsSubtitle: "Your personality analysis based on ancient Vedic wisdom.",
+                overviewTab: "Overview",
+                analysisTab: "In-Depth Analysis",
+                recommendationsTab: "Suggestions",
+                colorTherapyTab: "Color Therapy",
+                advancedTab: "Advanced Reporting",
+                retakeBtn: "Retake Assessment",
+                sattva: "Sattva",
+                rajas: "Rajas",
+                tamas: "Tamas",
+                questions: [
+                    { q: "How do you typically wake up?", a: ["Calm and refreshed", "Anxious, ready to go", "Sluggish, want more sleep"] },
+                    { q: "What motivates your actions?", a: ["Clarity and purpose", "Goals and ambitions", "Habit or comfort"] },
+                    { q: "How do you handle stress?", a: ["Detach and reflect", "Push through harder", "Avoid or numb it"] },
+                    { q: "Your reaction to conflict is to...", a: ["Seek peace and understanding", "Argue or defend assertively", "Withdraw or shut down"] },
+                    { q: "When you are alone, you usually...", a: ["Meditate, read, or contemplate", "Plan, scroll, or multitask", "Sleep or binge-watch"] },
+                    { q: "How do you relate to food?", a: ["Choose light, pure foods", "Crave stimulating or spicy foods", "Prefer heavy or comfort foods"] },
+                    { q: "How do you learn best?", a: ["Through insight and reflection", "Through challenge and debate", "With repetition"] },
+                    { q: "You are drawn to people who are...", a: ["Calm and wise", "Energetic and driven", "Quiet and dependable"] },
+                    { q: "Your daily energy is...", a: ["Even and consistent", "Spiky—highs and lows", "Low and sluggish"] },
+                    { q: "How do you typically speak?", a: ["Clearly, gently, and meaningfully", "Fast, persuasively, and effectively", "Minimally, vaguely, or confused"] },
+                    { q: "How do you feel about change?", a: ["Embrace it with awareness", "Chase it to avoid boredom", "Resist it unless forced"] },
+                    { q: "When complimented, you...", a: ["Acknowledge and let go", "Feel motivated to do more", "Feel suspicious or indifferent"] },
+                    { q: "How do you make decisions?", a: ["After balanced reflection", "Quickly, on impulse", "Delay or avoid deciding"] },
+                    { q: "Your ideal environment is...", a: ["Natural and well-ordered", "Busy and full of action", "Dim, cozy, and isolated"] },
+                    { q: "At night, how does your mind feel?", a: ["Settled and content", "Racing with thoughts", "Foggy or restless"] },
+                    { q: "How do you approach your work or daily tasks?", a: ["With mindfulness and a sense of higher purpose", "With a focus on efficiency and achieving results", "I do what's necessary to get by"] },
+                    { q: "What kind of music do you prefer?", a: ["Calm, meditative, or classical music", "Upbeat, energetic, and powerful music", "Familiar, comforting, or melancholic tunes"] },
+                    { q: "When faced with a new opportunity, you feel...", a: ["Open and curious about its potential for growth", "Excited by the challenge and possibility of reward", "Hesitant and prefer to stick with what you know"] },
+                    { q: "Your living space tends to be...", a: ["Clean, organized, and filled with natural light", "Vibrant, full of personal projects, sometimes a bit messy", "Cozy and comfortable, but can become cluttered"] },
+                    { q: "How do you view wealth and possessions?", a: ["As tools for good, to be used with detachment", "As symbols of success and a means to enjoy life", "As a source of security and comfort"] }
+                ],
+                results: {
+                    archetypes: {
+                        SRT: { archetype: "The Balanced Leader", description: "You have a powerful mix of clear vision (Sattva), passionate energy (Rajas), and grounded stability (Tamas). This makes you a natural and effective leader who can inspire people, drive action, and ensure things get done right." },
+                        STR: { archetype: "The Wise Strategist", description: "Your greatest strength is your clear, calm mind (Sattva). You ground your ideas in practical reality (Tamas) before taking action (Rajas). This makes you a master planner who builds things that last." },
+                        RST: { archetype: "The Passionate Teacher", description: "You are fueled by a powerful energy (Rajas) and guided by a clear wisdom (Sattva). This combination makes you a natural teacher and motivator, able to make complex ideas exciting and easy to understand for everyone." },
+                        RTS: { archetype: "The Driven Pragmatist", description: "You are a powerhouse of action (Rajas) who is also incredibly practical and grounded (Tamas). You have a rare ability to get things done in the real world, using your wisdom (Sattva) to make your efforts even more effective." },
+                        TSR: { archetype: "The Grounded Innovator", description: "Your foundation is your stability (Tamas), but it’s lit up by bright ideas (Sattva) and a surprising amount of energy (Rajas). You don't just resist change; you create meaningful, lasting improvements from a solid base." },
+                        TRS: { archetype: "The Resilient Caretaker", description: "You are the rock for your family and community. Your stability (Tamas) is fueled by a strong inner drive (Rajas) and a deep sense of compassion (Sattva). You provide the safety and support that helps others thrive." },
+                        SR: { archetype: "The Pure Achiever", description: "You are a potent mix of clear vision (Sattva) and powerful action (Rajas). You can turn ideas into reality with amazing speed because you have very little holding you back. You're an idealist who gets things done." },
+                        ST: { archetype: "The Peaceful Anchor", description: "You combine clear wisdom (Sattva) with deep stability (Tamas). This makes you a profoundly calming presence in a chaotic world. People come to you for your steady and peaceful perspective." },
+                        RS: { archetype: "The Dynamic Creator", description: "You are a whirlwind of creative energy (Rajas) guided by clear insight (Sattva). You are a charismatic and innovative force, constantly coming up with new ideas and inspiring others to join you." },
+                        RT: { archetype: "The Powerful Executor", description: "You have the unstoppable drive of Rajas and the grounding endurance of Tamas. This makes you a master of getting things done. You have the energy to start and the stability to finish, no matter the obstacle." },
+                        TS: { archetype: "The Steady Guide", description: "Your deep stability (Tamas) is illuminated by a clear, guiding wisdom (Sattva). This makes you a patient, trustworthy, and compassionate guide. You move deliberately, and your actions are always filled with purpose." },
+                        TR: { archetype: "The Determined Builder", description: "You have a powerful combination of endurance (Tamas) and drive (Rajas). You are a master builder, able to take on long, difficult projects and see them through with unwavering determination." },
+                        "SRT-SR": { archetype: "The Visionary Leader", description: "As a Balanced Leader, your primary strength is your clear vision (Sattva) combined with a powerful drive (Rajas). You excel at setting a direction and inspiring others to follow with enthusiasm and purpose." },
+                        "SRT-ST": { archetype: "The Grounded Leader", description: "As a Balanced Leader, you lean on your stability (Tamas) and clarity (Sattva). You lead with a calm, steady hand, creating a secure environment where great ideas can take root and grow." },
+                    },
+                    analysis: {
+                        interplayTitle: "How Your Gunas Work Together",
+                        balanceTitle: "Your Path to Balance",
+                        shadowTitle: "Your Hidden Challenge",
+                        problemTitle: "Your Primary Challenge",
+                        solutionTitle: "A Path to Growth",
+                        problems: {
+                            sattva: { problem: "Your gift of clarity can sometimes lead to getting lost in thought. You might have wonderful ideas but struggle to bring them into the real world, leading to a feeling of being stuck or unfulfilled.", solution: "The key is to ground your wisdom in action. Start by choosing one small, manageable idea and breaking it down into simple, practical steps. Taking that first step is your gateway to turning vision into reality." },
+                            rajas: { problem: "Your incredible drive is a superpower, but it can also lead to burnout. You might feel a constant need to be 'doing,' which can leave you feeling restless, scattered, and eventually exhausted.", solution: "The path to balance is learning to pause. Intentionally schedule short breaks for 'non-doing'—like a 10-minute walk without your phone. This isn't laziness; it's strategic rest that will make your actions more powerful." },
+                            tamas: { problem: "Your stability is a great strength, but it can sometimes turn into inertia or resistance to change. You might find yourself sticking to what's comfortable, even if it's no longer serving your growth.", solution: "Your path is to gently introduce new energy. Actively seek out inspiration—whether it's through uplifting music, a new hobby, or regular, gentle exercise. This helps move stagnant energy and invites fresh perspectives." }
+                        },
+                        SRT: { interplay: "Think of it like this: Sattva is your clear idea, Rajas is the energy to act on it, and Tamas is the steady hand that keeps you grounded. All three work together beautifully.", balance: "To stay in harmony, notice what you need. Feeling scattered? Rest and recharge your Tamas. Feeling stuck? Reconnect with your 'why' to spark your Sattva.", shadow: "Your challenge can be feeling like you have to be 'perfect' in all areas. This can be exhausting! Remember that true balance is about flowing with life, not being rigid." },
+                        STR: { interplay: "You think things through. Your clear ideas (Sattva) are first checked against reality (Tamas) before you act (Rajas). This makes your actions smart and effective.", balance: "To avoid overthinking, make time for fun and action! Try a new hobby or a friendly competition to get your Rajas energy flowing.", shadow: "Your challenge can be planning too much and being afraid to be spontaneous. Trust your gut feelings (your Sattva) more often—they are usually right!" },
+                        RS: { interplay: "You are a charismatic and inspiring leader. Your energy (Rajas) is guided by your wisdom (Sattva), making your passion both intelligent and contagious.", balance: "You have a lot of energy! Grounding practices, like walking in nature, are essential to keep you from feeling scattered and to focus your dynamic power.", shadow: "Your challenge can be arrogance. Because you're smart and energetic, you might think you're always right. Practice being open to other people's ideas." },
+                    },
+                    recommendations: {
+                        dietaryTitle: "Food to Feel Your Best",
+                        activityTitle: "Activities for Harmony",
+                        colorTitle: "Colors for Your Energy",
+                        colorHowTo: "How to use:",
+                        challengeTitle: "A Challenge for Growth",
+                        solutionTitle: "An Actionable Step",
+                        challenges: {
+                            sattva: { challenge: "The risk for you is becoming too passive or detached, staying in the world of ideas without bringing them into reality.", solution: "This week, pick one small, practical task you've been putting off. Complete it from start to finish. Notice how good it feels to turn your clear thoughts into a finished action." },
+                            rajas: { challenge: "Your biggest risk is burnout. Your constant drive can leave you feeling exhausted and restless if you don't manage it wisely.", solution: "Schedule a 15-minute 'do nothing' break into your day. No phone, no planning—just sit or walk quietly. This intentional pause will recharge your energy for more effective action later." },
+                            tamas: { challenge: "Your greatest challenge is inertia or getting 'stuck' in a routine. Comfort can sometimes keep you from growing.", solution: "This week, do one thing that is slightly outside your comfort zone. Try a new type of exercise, cook a new recipe, or take a different route to work. The goal is to gently shake up your energy." }
+                        },
+                        dietary: {
+                            sattva: ["Fresh fruits and vegetables", "Whole grains like rice and oats", "Lightly cooked meals", "Herbal teas"],
+                            rajas: ["Spicy foods in moderation", "Sour and salty flavors", "Stimulants like coffee/tea (mindfully)", "A variety of tastes and textures"],
+                            tamas: ["Freshly cooked, light, and warm meals", "Foods that are easy to digest", "Mild spices like ginger and turmeric", "Avoiding leftovers and processed foods"]
+                        },
+                        activities: {
+                            sattva: ["Meditation and Yoga", "Spending quiet time in nature", "Reading spiritual texts", "Gentle morning walks"],
+                            rajas: ["Regular vigorous exercise", "Competitive sports", "Engaging in challenging projects", "Learning new skills"],
+                            tamas: ["Gentle stretching and Tai Chi", "Gardening or pottery", "Restorative yoga", "Maintaining a consistent sleep schedule"]
+                        },
+                        colorTherapy: {
+                            problemTitle: "Color Challenge",
+                            solutionTitle: "Color Solution",
+                            sattva: { colors: [ { name: "White", hex: "#FFFFFF" }, { name: "Light Blue", hex: "#ADD8E6" }, { name: "Pale Yellow", hex: "#FFFFE0" } ], colorInfo: "These colors promote purity, tranquility, and clarity. They help calm the mind and elevate consciousness.", howToUse: ["Wear white or light-colored clothes during meditation.", "Paint your study room with these colors.", "Use light-colored bed linens for peaceful sleep."], problem: "An excess of light colors can sometimes make you feel 'spacey' or disconnected from reality.", solution: "Balance your Sattvic colors with small, grounding accents like a dark brown cushion or dark green plants." },
+                            rajas: { colors: [ { name: "Red", hex: "#FF0000" }, { name: "Orange", hex: "#FFA500" }, { name: "Bright Pink", hex: "#FF69B4" } ], colorInfo: "These vibrant colors stimulate energy, passion, and action. Use them to invigorate your space.", howToUse: ["Use as accent colors (cushions, art) in your home office.", "Wear these colors when you need a boost of confidence or energy.", "Avoid overusing them in the bedroom."], problem: "Too much Rajasic color can lead to overstimulation, restlessness, and even aggression.", solution: "Use these powerful colors as accents, not as the main event. A single red cushion is better than a red wall." },
+                            tamas: { colors: [ { name: "Dark Blue", hex: "#00008B" }, { name: "Brown", hex: "#A52A2A" }, { name: "Grey", hex: "#808080" } ], colorInfo: "These colors provide stability, grounding, and a sense of security. They are ideal for creating a cozy environment.", howToUse: ["Incorporate these colors in flooring, rugs, or heavy furniture.", "Create a cozy reading nook with dark, earthy-toned blankets.", "Balance with lighter colors on the walls."], problem: "An over-reliance on dark colors can create an environment that feels heavy, stagnant, or even depressing.", solution: "Use these grounding colors for furniture or floors, but keep your walls light and bright. Add pops of vibrant, Rajasic color." }
+                        }
+                    }
+                }
+            }
+        };
+        
+        function init() {
+            setupEventListeners();
+            updateUIText();
+            startQuiz();
+        }
+
+        function setupEventListeners() {
+            dom.retakeAssessmentBtn.addEventListener('click', resetQuiz);
+            dom.overviewTab.addEventListener('click', () => openTab('overviewContent'));
+            dom.analysisTab.addEventListener('click', () => openTab('analysisContent'));
+            dom.recommendationsTab.addEventListener('click', () => openTab('recommendationsContent'));
+            dom.colorTherapyTab.addEventListener('click', () => openTab('colorTherapyContent'));
+            dom.advancedTab.addEventListener('click', () => alert("Advanced reporting is a premium feature."));
+            dom.backToDashboardBtn.addEventListener('click', () => {
+                if (window.completeQuiz) {
+                    window.completeQuiz('guna');
+                } else {
+                    alert("Quiz complete! (Normally you would be returned to the dashboard).");
+                }
+            });
+        }
+        
+        function updateUIText() {
+            const lang = state.currentLanguage;
+            document.querySelectorAll('[data-i18n-key]').forEach(el => {
+                const key = el.dataset.i18nKey;
+                if (key === 'questionCounter' || key === 'answeredStatus') return;
+                const translation = key.split('.').reduce((obj, i) => (obj ? obj[i] : null), i18n[lang]);
+                if (translation && typeof translation !== 'function') {
+                    el.innerHTML = translation;
+                }
+            });
+            if (!dom.quizContainer.classList.contains('hidden')) renderQuestion();
+            else if (!dom.result.classList.contains('hidden')) displayResults();
+        }
+            
+        function startQuiz() {
+            dom.appContainer.classList.add('quiz-stage');
+            dom.quizContainer.classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const totalQuestions = i18n.en.questions.length;
+            if (state.currentQuestionIndex >= totalQuestions) {
+                showResultsScreen();
+                return;
+            }
+
+            const lang = state.currentLanguage;
+            const qData = i18n[lang].questions[state.currentQuestionIndex];
+            const shuffledOptions = [
+                { text: qData.a[0], guna: 'sattva' },
+                { text: qData.a[1], guna: 'rajas' },
+                { text: qData.a[2], guna: 'tamas' }
+            ].sort(() => Math.random() - 0.5);
+
+            dom.questionBox.classList.add('fade-out');
+            
+            setTimeout(() => {
+                dom.questionBox.innerHTML = `<h3 class="text-xl sm:text-2xl font-semibold mb-6 text-gray-800">${qData.q}</h3><div class="space-y-4">${shuffledOptions.map((option) => `<button data-guna="${option.guna}" class="option-btn w-full text-left p-4 sm:p-5 rounded-xl flex justify-between items-center"><span class="text-base sm:text-lg font-medium text-gray-700">${option.text}</span><span class="selection-dot w-5 h-5 border-2 border-gray-300 rounded-full"></span></button>`).join('')}</div>`;
+                dom.questionBox.querySelectorAll('.option-btn').forEach(button => button.addEventListener('click', () => selectOption(button)));
+                dom.questionBox.classList.remove('fade-out');
+                dom.questionBox.classList.add('fade-in');
+            }, 250);
+
+            updateProgressDisplay();
+        }
+
+        function selectOption(selectedButton) {
+            dom.questionBox.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+            selectedButton.classList.add('selected');
+            const gunaType = selectedButton.dataset.guna;
+            if (gunaType) state.scores[gunaType]++;
+            state.currentQuestionIndex++;
+            setTimeout(renderQuestion, 600);
+        }
+        
+        function showResultsScreen() {
+            dom.quizContainer.classList.add('hidden');
+            dom.result.classList.remove('hidden');
+            dom.appContainer.classList.remove('quiz-stage');
+            dom.appContainer.classList.add('results-stage');
+            displayResults();
+        }
+
+        function displayResults() {
+            calculatePersonality();
+            renderOverviewTab();
+            renderAnalysisTab();
+            renderRecommendationsTab();
+            renderColorTherapyTab();
+            openTab('overviewContent'); 
+        }
+        
+        function openTab(tabName) { 
+            state.activeTab = tabName; 
+            ['overviewContent', 'analysisContent', 'recommendationsContent', 'colorTherapyContent'].forEach(id => document.getElementById(id).classList.add('hidden')); 
+            ['overviewTab', 'analysisTab', 'recommendationsTab', 'colorTherapyTab'].forEach(id => document.getElementById(id).classList.remove('active')); 
+            document.getElementById(tabName).classList.remove('hidden'); 
+            document.getElementById(tabName.replace('Content', 'Tab')).classList.add('active'); 
+        }
+        
+        function resetQuiz() {
+            Object.assign(state, { currentQuestionIndex: 0, scores: { sattva: 0, rajas: 0, tamas: 0 }, personalityArchetypeCode: '', gunaTraitCode: '', dominantGuna: '', activeTab: 'overviewContent'});
+            dom.appContainer.className = '';
+            dom.result.classList.add('hidden');
+            init();
+        }
+        
+        function updateProgressDisplay(){
+            const answered = state.currentQuestionIndex;
+            const total = i18n.en.questions.length;
+            const progressPercentage = total > 0 ? (answered / total) * 100 : 0;
+            dom.questionCounter.textContent = i18n[state.currentLanguage].questionCounter(Math.min(answered + 1, total), total);
+            dom.answeredStatus.textContent = i18n[state.currentLanguage].answeredStatus(answered, total);
+            dom.progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        function calculatePersonality() {
+            const totalScore = Object.values(state.scores).reduce((sum, score) => sum + score, 0) || 1;
+            const percentages = { 
+                sattva: Math.round((state.scores.sattva / totalScore) * 100), 
+                rajas: Math.round((state.scores.rajas / totalScore) * 100), 
+                tamas: Math.round((state.scores.tamas / totalScore) * 100) 
+            };
+            
+            const sortedGunas = Object.entries(state.scores).sort(([,a],[,b]) => b - a);
+            state.dominantGuna = sortedGunas[0][0];
+            state.gunaTraitCode = sortedGunas.map(([key]) => key.charAt(0).toUpperCase()).join('');
+
+            const highestScore = sortedGunas[0][1];
+            const lowestScore = sortedGunas[2][1];
+
+            if (lowestScore < highestScore * 0.35 && highestScore > 0) {
+                 state.personalityArchetypeCode = state.gunaTraitCode.substring(0, 2);
+            } else {
+                 const combinedCode = `${state.gunaTraitCode}-${state.gunaTraitCode.substring(0, 2)}`;
+                 state.personalityArchetypeCode = i18n.en.results.archetypes[combinedCode] ? combinedCode : state.gunaTraitCode;
+            }
+            return { percentages };
+        }
+
+        function renderOverviewTab() {
+            const lang = state.currentLanguage;
+            const data = i18n[lang].results.archetypes[state.personalityArchetypeCode];
+            const { percentages } = calculatePersonality();
+            if (!data) return;
+            const breakdownText = `Trait Breakdown: S: ${percentages.sattva}% R: ${percentages.rajas}% T: ${percentages.tamas}%`;
+            document.getElementById('overviewContent').innerHTML = `
+                <div class="personality-card">
+                    <h2 class="personality-title">${data.archetype}</h2>
+                    <div class="personality-code">${state.gunaTraitCode}</div>
+                    <div class="personality-breakdown">${breakdownText}</div>
+                    <p class="personality-description">${data.description}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-amber-500"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold text-amber-600">${i18n[lang].sattva}</h3><span class="font-bold text-lg">${percentages.sattva}%</span></div><div class="relative w-full bg-gray-200 rounded-full h-3 mb-2"><div class="sattva-bar guna-bar rounded-full h-3" style="width: ${percentages.sattva}%"></div></div></div>
+                    <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-pink-500"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold text-pink-600">${i18n[lang].rajas}</h3><span class="font-bold text-lg">${percentages.rajas}%</span></div><div class="relative w-full bg-gray-200 rounded-full h-3 mb-2"><div class="rajas-bar guna-bar rounded-full h-3" style="width: ${percentages.rajas}%"></div></div></div>
+                    <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-violet-500"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold text-violet-600">${i18n[lang].tamas}</h3><span class="font-bold text-lg">${percentages.tamas}%</span></div><div class="relative w-full bg-gray-200 rounded-full h-3 mb-2"><div class="tamas-bar guna-bar rounded-full h-3" style="width: ${percentages.tamas}%"></div></div></div>
+                </div>`;
+        }
+        function renderAnalysisTab() {
+            const lang = state.currentLanguage;
+            const primaryArchetypeCode = state.personalityArchetypeCode.split('-')[0];
+            const data = i18n[lang].results.analysis[primaryArchetypeCode];
+            const problemData = i18n[lang].results.analysis.problems[state.dominantGuna];
+            if (!data || !problemData) return;
+            const titles = i18n[lang].results.analysis;
+            document.getElementById('analysisContent').innerHTML = `<div class="space-y-6">
+                <div class="interplay-box p-5 rounded-lg"><h3 class="text-xl font-semibold text-blue-700 mb-2">${titles.interplayTitle}</h3><p class="text-gray-700">${data.interplay}</p></div>
+                <div class="balance-box p-5 rounded-lg"><h3 class="text-xl font-semibold text-purple-700 mb-2">${titles.balanceTitle}</h3><p class="text-gray-700">${data.balance}</p></div>
+                <div class="shadow-box p-5 rounded-lg"><h3 class="text-xl font-semibold text-pink-700 mb-2">${titles.shadowTitle}</h3><p class="text-gray-700">${data.shadow}</p></div>
+                </div>`;
+        }
+        function renderRecommendationsTab() {
+            const lang = state.currentLanguage;
+            const recs = i18n[lang].recommendations;
+            const challengeData = recs.challenges[state.dominantGuna];
+            document.getElementById('recommendationsContent').innerHTML = `<div class="space-y-6">
+                <div class="bg-white p-5 rounded-lg shadow-md"><h3 class="text-xl font-semibold text-green-700 mb-3">${recs.dietaryTitle}</h3><ul class="list-disc pl-5 space-y-2 text-gray-700">${recs.dietary[state.dominantGuna].map(item => `<li>${item}</li>`).join('')}</ul></div>
+                <div class="bg-white p-5 rounded-lg shadow-md"><h3 class="text-xl font-semibold text-blue-700 mb-3">${recs.activityTitle}</h3><ul class="list-disc pl-5 space-y-2 text-gray-700">${recs.activities[state.dominantGuna].map(item => `<li>${item}</li>`).join('')}</ul></div>
+                <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-xl font-semibold text-orange-700 mb-3">${recs.challengeTitle}</h3><div class="grid md:grid-cols-2 gap-6 mt-4"><div class="problem-box p-5 rounded-lg"><h4 class="text-lg font-semibold text-red-700 mb-2">${recs.challengeTitle}</h4><p class="text-gray-700">${challengeData.challenge}</p></div><div class="solution-box p-5 rounded-lg"><h4 class="text-lg font-semibold text-green-700 mb-2">${recs.solutionTitle}</h4><p class="text-gray-700">${challengeData.solution}</p></div></div></div>
+            </div>`;
+        }
+        function renderColorTherapyTab() {
+            const lang = state.currentLanguage;
+            const data = i18n[lang].recommendations.colorTherapy[state.dominantGuna];
+            const recs = i18n[lang].recommendations.colorTherapy;
+            document.getElementById('colorTherapyContent').innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-2xl font-bold text-indigo-700 mb-4">${recs.colorTitle}</h3>
+                <div class="flex flex-wrap gap-4 items-center mb-4">${data.colors.map(c => `<div class="text-center"><div class="color-swatch mx-auto" style="background-color: ${c.hex};"></div><p class="text-sm mt-2 text-gray-600">${c.name}</p></div>`).join('')}</div>
+                <p class="text-gray-700 mb-4">${data.colorInfo}</p>
+                <h4 class="font-semibold text-gray-800 mb-2">${recs.howToUse}</h4>
+                <ul class="list-disc pl-5 space-y-2 text-gray-700">${data.howToUse.map(item => `<li>${item}</li>`).join('')}</ul>
+                <div class="grid md:grid-cols-2 gap-6 mt-8"><div class="problem-box p-5 rounded-lg"><h3 class="text-xl font-semibold text-red-700 mb-2">${recs.problemTitle}</h3><p class="text-gray-700">${data.problem}</p></div><div class="solution-box p-5 rounded-lg"><h3 class="text-xl font-semibold text-green-700 mb-2">${recs.solutionTitle}</h3><p class="text-gray-700">${data.solution}</p></div></div>
+            </div>`;
+        }
+        
+        init();
+    })();
+    </script>
+</section>
